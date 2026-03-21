@@ -10,21 +10,41 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0f0f1a;
-            color: #f1f5f9;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem 1rem;
+        :root {
+            --indigo: #6366f1;
+            --purple: #a855f7;
+            --pink:   #ec4899;
+            --bg:     #0f0f1a;
+            --surface:#1e1e2e;
+            --border: rgba(255,255,255,0.08);
+            --text:   #f1f5f9;
+            --muted:  #94a3b8;
+            --dim:    #475569;
         }
 
-        .container {
-            width: 100%;
-            max-width: 760px;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem 1rem 3rem;
         }
+
+        /* ── Layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 860px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+        }
+
+        .main-col { min-width: 0; }
 
         /* ── Header ── */
         header {
@@ -34,7 +54,7 @@
 
         .badge {
             display: inline-block;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
             color: #fff;
             font-size: 0.75rem;
             font-weight: 600;
@@ -48,7 +68,7 @@
         header h1 {
             font-size: clamp(1.6rem, 4vw, 2.4rem);
             font-weight: 700;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 60%, #ec4899 100%);
+            background: linear-gradient(135deg, var(--indigo) 0%, var(--purple) 60%, var(--pink) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -56,22 +76,19 @@
             margin-bottom: 0.6rem;
         }
 
-        header p {
-            color: #94a3b8;
-            font-size: 1rem;
-        }
+        header p { color: var(--muted); font-size: 1rem; }
 
         /* ── Card ── */
         .card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
             border-radius: 1.25rem;
             padding: 2rem;
             margin-bottom: 1.5rem;
             backdrop-filter: blur(12px);
         }
 
-        .card h2 {
+        .card-title {
             font-size: 1rem;
             font-weight: 600;
             color: #cbd5e1;
@@ -81,13 +98,14 @@
             gap: 0.5rem;
         }
 
-        .card h2::before {
+        .card-title::before {
             content: '';
             display: inline-block;
             width: 4px;
             height: 1rem;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
             border-radius: 2px;
+            flex-shrink: 0;
         }
 
         /* ── Form ── */
@@ -98,15 +116,13 @@
             margin-bottom: 1.25rem;
         }
 
-        @media (max-width: 520px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
 
         .field label {
             display: block;
             font-size: 0.8rem;
             font-weight: 500;
-            color: #94a3b8;
+            color: var(--muted);
             margin-bottom: 0.4rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
@@ -115,38 +131,33 @@
         .field input {
             width: 100%;
             padding: 0.7rem 1rem;
-            background: #1e1e2e;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 0.6rem;
-            color: #f1f5f9;
+            color: var(--text);
             font-family: inherit;
             font-size: 0.95rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .field input::placeholder { color: #475569; }
+        .field input::placeholder { color: var(--dim); }
 
         .field input:focus {
             outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            border-color: var(--indigo);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
         }
 
-        .hint {
-            font-size: 0.78rem;
-            color: #475569;
-            margin-top: 0.35rem;
-        }
+        .hint { font-size: 0.78rem; color: var(--dim); margin-top: 0.35rem; }
 
-        /* ── Button ── */
+        /* ── Buttons ── */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            width: 100%;
+            gap: 0.45rem;
             padding: 0.85rem 1.5rem;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
             color: #fff;
             font-family: inherit;
             font-size: 1rem;
@@ -155,38 +166,81 @@
             border-radius: 0.75rem;
             cursor: pointer;
             transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+            width: 100%;
+            text-decoration: none;
         }
 
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 28px rgba(99, 102, 241, 0.45); }
+        .btn:hover  { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 28px rgba(99,102,241,0.45); }
         .btn:active { transform: translateY(0); }
 
-        /* ── Result ── */
+        .btn-sm {
+            padding: 0.45rem 0.9rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            width: auto;
+            box-shadow: none;
+        }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.06);
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover { background: rgba(255,255,255,0.1); box-shadow: none; }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            box-shadow: none;
+        }
+
+        .btn-danger:hover { background: rgba(239,68,68,0.25); box-shadow: none; }
+
+        /* ── Result Card ── */
         .result-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(99, 102, 241, 0.25);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(99,102,241,0.25);
             border-radius: 1.25rem;
             padding: 2rem;
             margin-bottom: 1.5rem;
         }
 
-        .result-card h2 {
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .result-title {
             font-size: 1rem;
             font-weight: 600;
             color: #a5b4fc;
-            margin-bottom: 1.25rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .result-card h2::before {
+        .result-title::before {
             content: '';
             display: inline-block;
             width: 4px;
             height: 1rem;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
             border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .result-body {
@@ -197,74 +251,327 @@
             word-break: break-word;
         }
 
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #22c55e;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.6rem 1.1rem;
+            border-radius: 0.6rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Sidebar / History ── */
+        .sidebar {}
+
+        .sidebar-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1rem;
+            background: linear-gradient(135deg, var(--indigo), var(--purple));
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .history-empty {
+            color: var(--dim);
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 70vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        .history-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 0.75rem;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: rgba(99,102,241,0.4);
+            background: rgba(99,102,241,0.06);
+        }
+
+        .history-item.active {
+            border-color: rgba(99,102,241,0.5);
+            background: rgba(99,102,241,0.1);
+        }
+
+        .history-meta {
+            font-size: 0.78rem;
+            color: var(--dim);
+            margin-bottom: 0.3rem;
+        }
+
+        .history-label {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+
+        .history-tag {
+            display: inline-block;
+            background: rgba(99,102,241,0.2);
+            color: #a5b4fc;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            margin-right: 0.3rem;
+        }
+
         /* ── Footer ── */
         footer {
             text-align: center;
             color: #334155;
             font-size: 0.8rem;
-            margin-top: 1rem;
+            margin-top: 2rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
 
+    <!-- Toast notification -->
+    <div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+    <!-- Hidden textarea for clipboard copy -->
+    <textarea id="copy-buffer" style="position:absolute;left:-9999px;top:-9999px;opacity:0;" aria-hidden="true"></textarea>
+
+    <div style="max-width:1100px;margin:0 auto;">
         <!-- ── Header ── -->
         <header>
             <div class="badge">✦ AI-Powered</div>
             <h1>Student Side-Income<br>Idea Generator</h1>
             <p>Tell us your budget &amp; free time — get 3 tailored earning ideas instantly.</p>
         </header>
+    </div>
 
-        <!-- ── Input Card ── -->
-        <div class="card">
-            <h2>Your Details</h2>
-            <form method="POST" action="/">
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="budget">💰 Budget (₹)</label>
-                        <input
-                            type="text"
-                            id="budget"
-                            name="budget"
-                            placeholder="e.g. 500"
-                            required
-                            value="{{ request.form.get('budget', '') }}"
-                        >
-                        <p class="hint">How much can you invest to get started?</p>
+    <div class="layout">
+
+        <!-- ══ Main Column ══ -->
+        <div class="main-col">
+
+            <!-- ── Input Card ── -->
+            <div class="card">
+                <div class="card-title">Your Details</div>
+                <form method="POST" action="/">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="budget">💰 Budget (₹)</label>
+                            <input
+                                type="text"
+                                id="budget"
+                                name="budget"
+                                placeholder="e.g. 500"
+                                required
+                                value="{{ budget }}"
+                            >
+                            <p class="hint">How much can you invest to get started?</p>
+                        </div>
+                        <div class="field">
+                            <label for="time">⏱ Free Time (hrs/day)</label>
+                            <input
+                                type="text"
+                                id="time"
+                                name="time"
+                                placeholder="e.g. 2"
+                                required
+                                value="{{ time_val }}"
+                            >
+                            <p class="hint">Hours available outside college each day.</p>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label for="time">⏱ Free Time (hrs/day)</label>
-                        <input
-                            type="text"
-                            id="time"
-                            name="time"
-                            placeholder="e.g. 2"
-                            required
-                            value="{{ request.form.get('time', '') }}"
-                        >
-                        <p class="hint">Hours available outside college each day.</p>
+                    <button type="submit" class="btn">
+                        ✦ Generate My Ideas
+                    </button>
+                </form>
+            </div>
+
+            <!-- ── Result Card ── -->
+            {% if result %}
+            <div class="result-card" id="result-card">
+                <div class="result-header">
+                    <div class="result-title">Your Personalised Ideas</div>
+                    <div class="action-row">
+                        <button class="btn btn-sm btn-ghost" onclick="copyResult()" title="Copy to clipboard">
+                            📋 Copy
+                        </button>
+                        <a class="btn btn-sm btn-ghost" href="/download" title="Download as text file">
+                            ⬇ Download
+                        </a>
                     </div>
                 </div>
-                <button type="submit" class="btn">
-                    ✦ Generate My Ideas
-                </button>
-            </form>
-        </div>
+                <div class="result-body" id="result-text">{{ result }}</div>
+            </div>
+            {% endif %}
 
-        <!-- ── Result Card ── -->
-        {% if result %}
-        <div class="result-card">
-            <h2>Your Personalised Ideas</h2>
-            <div class="result-body">{{ result }}</div>
-        </div>
-        {% endif %}
+            <!-- ── Footer ── -->
+            <footer>
+                <p>Powered by Groq &amp; Flask &nbsp;·&nbsp; Built for Indian college students</p>
+            </footer>
 
-        <!-- ── Footer ── -->
-        <footer>
-            <p>Powered by Groq &amp; Flask &nbsp;·&nbsp; Built for Indian college students</p>
-        </footer>
+        </div><!-- /main-col -->
 
-    </div>
+        <!-- ══ Sidebar ══ -->
+        <div class="sidebar">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="sidebar-title">🕘 History</div>
+                    {% if history %}
+                    <form method="POST" action="/clear-history" style="margin:0;">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Clear all history">
+                            🗑 Clear
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                {% if not history %}
+                <p class="history-empty">No searches yet.<br>Generate your first idea above!</p>
+                {% else %}
+                <div class="history-list">
+                    {% for entry in history %}
+                    <div
+                        class="history-item {% if loop.first and result %}active{% endif %}"
+                        onclick="showHistory({{ loop.index0 }})"
+                        data-result="{{ entry.result | e }}"
+                        data-budget="{{ entry.budget | e }}"
+                        data-time="{{ entry.time | e }}"
+                    >
+                        <div class="history-meta">{{ entry.timestamp }}</div>
+                        <div class="history-label">
+                            <span class="history-tag">₹{{ entry.budget }}</span>
+                            <span class="history-tag">{{ entry.time }}h/day</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div><!-- /sidebar -->
+
+    </div><!-- /layout -->
+
+    <script>
+        /* ── Copy to clipboard ── */
+        function copyResult() {
+            const text = document.getElementById('result-text');
+            if (!text) return;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text.innerText).then(showToast);
+            } else {
+                const buf = document.getElementById('copy-buffer');
+                buf.value = text.innerText;
+                buf.select();
+                document.execCommand('copy');
+                showToast();
+            }
+        }
+
+        function showToast() {
+            const t = document.getElementById('toast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2200);
+        }
+
+        /* ── History viewer ── */
+        function showHistory(idx) {
+            const items = document.querySelectorAll('.history-item');
+            const entry = items[idx];
+            if (!entry) return;
+
+            // Highlight active item
+            items.forEach(el => el.classList.remove('active'));
+            entry.classList.add('active');
+
+            const resultText  = entry.dataset.result;
+            const budget      = entry.dataset.budget;
+            const timeVal     = entry.dataset.time;
+
+            // Populate form fields
+            const budgetInput = document.getElementById('budget');
+            const timeInput   = document.getElementById('time');
+            if (budgetInput) budgetInput.value = budget;
+            if (timeInput)   timeInput.value   = timeVal;
+
+            // Show / update result card
+            let card = document.getElementById('result-card');
+            if (!card) {
+                // Create the result card dynamically if it doesn't exist
+                card = document.createElement('div');
+                card.className = 'result-card';
+                card.id = 'result-card';
+                card.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">Your Personalised Ideas</div>
+                        <div class="action-row">
+                            <button class="btn btn-sm btn-ghost" onclick="copyResult()" title="Copy to clipboard">📋 Copy</button>
+                            <a class="btn btn-sm btn-ghost" href="/download" title="Download as text file">⬇ Download</a>
+                        </div>
+                    </div>
+                    <div class="result-body" id="result-text"></div>
+                `;
+                const footer = document.querySelector('footer');
+                footer.parentNode.insertBefore(card, footer);
+            }
+
+            document.getElementById('result-text').textContent = resultText;
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+
 </body>
 </html>
