@@ -15,40 +15,27 @@ def index():
         time = request.form.get("time")
 
         prompt = f"""
-Give 3 realistic side-income ideas for an Indian college student.
+        Give 3 detailed side-income ideas.
 
-Budget: ₹{budget}
-Time available: {time} hours/day
+        Budget: ₹{budget}
+        Time: {time} hrs/day
 
-For EACH idea, give FULL detailed explanation in this format:
-
-1. Idea Name
-
-- What is it (2-3 lines explanation)
-- Why it works (clear reasoning)
-- How to start (step-by-step)
-- Required skills
-- Investment needed
-- Expected monthly earning (realistic ₹ range)
-- Platforms to use (real apps/websites)
-- Pro tips to succeed
-
-Make it practical, beginner-friendly, and detailed.
-Do NOT keep it short.
-"""
+        Explain each idea with:
+        - What
+        - How to start
+        - Earnings
+        - Tips
+        """
 
         chat = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="openai/gpt-oss-20b"
+            model="llama3-8b-8192"
         )
 
         result = chat.choices[0].message.content
 
     return render_template("index.html", result=result)
 
-
-if __name__ == "__main__":
- import os
 
 if __name__ == "__main__":
     app.run(debug=True)
