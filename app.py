@@ -15,10 +15,26 @@ def index():
         time = request.form.get("time")
 
         prompt = f"""
-Suggest 3 realistic ways for a student in India to earn money.
+Give 3 realistic side-income ideas for an Indian college student.
 
-Budget: {budget}
-Time per day: {time}
+Budget: ₹{budget}
+Time available: {time} hours/day
+
+For EACH idea, give FULL detailed explanation in this format:
+
+1. Idea Name
+
+- What is it (2-3 lines explanation)
+- Why it works (clear reasoning)
+- How to start (step-by-step)
+- Required skills
+- Investment needed
+- Expected monthly earning (realistic ₹ range)
+- Platforms to use (real apps/websites)
+- Pro tips to succeed
+
+Make it practical, beginner-friendly, and detailed.
+Do NOT keep it short.
 """
 
         chat = client.chat.completions.create(
