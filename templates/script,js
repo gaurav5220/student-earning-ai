@@ -1,53 +1,858 @@
-let history = JSON.parse(localStorage.getItem("history")) || [];
+/**
+ * AI Content Generator
+ * A modern, professional AI-powered web application
+ * with history management and smooth animations
+ */
 
-updateHistory(); // page load pe
+// ============================================
+// DOM ELEMENTS
+// ============================================
 
-function generate() {
-    let input = document.getElementById("inputText").value;
+const elements = {
+    // Sidebar
+    sidebar: document.getElementById('sidebar'),
+    sidebarOverlay: document.getElementById('sidebarOverlay'),
+    openSidebarBtn: document.getElementById('openSidebar'),
+    closeSidebarBtn: document.getElementById('closeSidebar'),
+    historyList: document.getElementById('historyList'),
+    historyCount: document.getElementById('historyCount'),
+    clearHistoryBtn: document.getElementById('clearHistory'),
+    
+    // Input
+    promptInput: document.getElementById('promptInput'),
+    charCount: document.getElementById('charCount'),
+    generateBtn: document.getElementById('generateBtn'),
+    
+    // Output
+    outputCard: document.getElementById('outputCard'),
+    outputActions: document.getElementById('outputActions'),
+    emptyState: document.getElementById('emptyState'),
+    loadingState: document.getElementById('loadingState'),
+    outputContent: document.getElementById('outputContent'),
+    outputText: document.getElementById('outputText'),
+    errorState: document.getElementById('errorState'),
+    errorMessage: document.getElementById('errorMessage'),
+    generatedTime: document.getElementById('generatedTime'),
+    wordCount: document.getElementById('wordCount'),
+    
+    // Action buttons
+    regenerateBtn: document.getElementById('regenerateBtn'),
+    copyBtn: document.getElementById('copyBtn'),
+    downloadBtn: document.getElementById('downloadBtn'),
+    retryBtn: document.getElementById('retryBtn'),
+    
+    // Toast container
+    toastContainer: document.getElementById('toastContainer')
+};
 
-    if (!input) return;
+// ============================================
+// STATE MANAGEMENT
+// ============================================
 
-    let result = "Generated: " + input;
+const state = {
+    history: [],
+    currentPrompt: '',
+    currentResponse: '',
+    isGenerating: false,
+    selectedHistoryId: null
+};
 
-    document.getElementById("output").innerText = result;
+// ============================================
+// STORAGE KEY
+// ============================================
 
-    let obj = {
-        input: input,
-        result: result,
-        time: new Date().toLocaleString()
+const STORAGE_KEY = 'ai_content_generator_history';
+
+// ============================================
+// MOCK AI RESPONSES
+// ============================================
+
+/**
+ * Collection of realistic AI-generated responses for different prompt types
+ */
+const mockResponses = {
+    email: [
+        `Subject: Project Update - Q4 Progress Report
+
+Dear Team,
+
+I hope this message finds you well. I wanted to provide a comprehensive update on our Q4 progress and outline our key achievements this quarter.
+
+**Key Accomplishments:**
+• Successfully launched the new customer portal, achieving 95% user satisfaction
+• Reduced operational costs by 18% through process automation
+• Onboarded 12 new enterprise clients, exceeding our target by 20%
+
+**Current Focus Areas:**
+We are now prioritizing the integration of advanced analytics features and preparing for the annual review meeting scheduled for next week.
+
+**Action Items:**
+Please review the attached documentation and submit your individual reports by Friday EOD.
+
+Looking forward to our continued collaboration.
+
+Best regards,
+[Your Name]`,
+        
+        `Subject: Meeting Follow-Up & Next Steps
+
+Hi [Name],
+
+Thank you for taking the time to meet with me today. I truly enjoyed our conversation about the upcoming product roadmap and appreciate your insights on market positioning.
+
+As discussed, here are the key takeaways and action items:
+
+1. **Timeline:** We agreed to aim for a soft launch by mid-March
+2. **Resources:** I'll coordinate with the design team for updated mockups
+3. **Budget:** Finance will provide revised projections by next Tuesday
+
+I'll send over the detailed proposal by end of week. Please don't hesitate to reach out if you have any questions in the meantime.
+
+Looking forward to our next conversation!
+
+Warm regards,
+[Your Name]`
+    ],
+    
+    social: [
+        `🚀 Exciting news! We just hit a major milestone that we've been working toward for months.
+
+The journey wasn't easy, but every challenge taught us something valuable. Here's what we learned:
+
+✨ Consistency beats perfection
+✨ Your community is your greatest asset
+✨ Small wins lead to big victories
+
+Thank you to everyone who believed in us from day one. This is just the beginning.
+
+What's one milestone you're working toward right now? Drop it in the comments! 👇
+
+#Growth #Milestone #Community #Success`,
+        
+        `💡 The best advice I ever received:
+
+"Stop waiting for the perfect moment. Start now, adjust later."
+
+Too many people wait for ideal conditions that never come. The truth is:
+- Your first attempt won't be perfect (and that's okay)
+- Feedback from action beats planning in isolation
+- Progress compounds over time
+
+What's one thing you've been putting off that you could start today?
+
+#Motivation #TakeAction #GrowthMindset`
+    ],
+    
+    blog: [
+        `# The Future of Remote Work: What 2024 Has Taught Us
+
+The landscape of work has fundamentally shifted, and there's no going back. As we navigate this new era, several key trends have emerged that are reshaping how we think about productivity, collaboration, and work-life balance.
+
+## The Rise of Asynchronous Communication
+
+Gone are the days when success was measured by hours spent in meetings. Forward-thinking companies have embraced asynchronous workflows, allowing team members to contribute their best work regardless of time zone. This shift has led to:
+
+- **Deeper focus time** for complex tasks
+- **Better documentation** of decisions and processes
+- **Improved work-life boundaries** for employees globally
+
+## Technology as an Enabler, Not a Replacement
+
+While AI tools have transformed how we work, the most successful organizations understand that technology should augment human creativity, not replace it. The winning formula combines cutting-edge tools with human insight and emotional intelligence.
+
+## Looking Ahead
+
+As we move forward, the companies that thrive will be those that embrace flexibility while maintaining strong cultural connections. The future belongs to organizations that trust their people and measure outcomes over hours.
+
+*What changes have you noticed in your workplace? Share your experiences in the comments below.*`,
+        
+        `# 5 Simple Habits That Transformed My Productivity
+
+After years of trying every productivity hack out there, I finally discovered what actually works. Here are five simple habits that have completely transformed how I work.
+
+## 1. The Two-Minute Rule
+
+If something takes less than two minutes, do it immediately. This tiny habit eliminates the mental overhead of tracking small tasks and keeps your to-do list manageable.
+
+## 2. Time Blocking (But Make It Flexible)
+
+Rather than rigid schedules, I block "types" of work. Creative work in the morning, meetings after lunch, admin tasks late afternoon. This respects your natural energy rhythms while maintaining structure.
+
+## 3. The Weekly Review
+
+Every Sunday, I spend 30 minutes reviewing the past week and planning the next. This practice alone has doubled my sense of clarity and reduced weekly stress significantly.
+
+## 4. Strategic "No"
+
+Learning to decline requests that don't align with my priorities was uncomfortable at first but liberating in practice. Protecting your time is protecting your ability to do meaningful work.
+
+## 5. Movement Breaks
+
+A 10-minute walk between work sessions does more for focus than another cup of coffee. Physical movement resets mental energy in ways that rest alone cannot.
+
+*Start with one habit this week. Which one will you try first?*`
+    ],
+    
+    default: [
+        `Thank you for your query! Here's a comprehensive response that addresses your request:
+
+**Overview**
+This is a thoughtfully crafted response designed to provide value and clarity. The content is structured to be both informative and actionable.
+
+**Key Points**
+1. Every great idea starts with a single step forward
+2. Clarity of purpose drives meaningful results
+3. Consistent effort compounds over time
+4. Feedback loops accelerate improvement
+5. Collaboration multiplies individual impact
+
+**Recommendations**
+Based on best practices, I suggest starting with the fundamentals and building from there. Focus on understanding the core principles before expanding to more advanced concepts.
+
+**Next Steps**
+Consider breaking your goals into smaller, manageable tasks. This approach reduces overwhelm and creates a clear path forward.
+
+Feel free to ask follow-up questions if you'd like me to elaborate on any specific aspect of this response.`,
+        
+        `Here's a detailed exploration of your topic:
+
+**Introduction**
+Understanding complex subjects requires breaking them into digestible components. Let's approach this systematically.
+
+**Core Concepts**
+The foundation of any successful endeavor rests on three pillars:
+- **Knowledge**: Understanding the fundamentals thoroughly
+- **Practice**: Applying concepts in real-world scenarios
+- **Reflection**: Learning from both successes and setbacks
+
+**Practical Application**
+To put these ideas into action:
+
+1. Start by identifying your primary objective
+2. Research existing solutions and best practices
+3. Create a minimal viable approach to test assumptions
+4. Gather feedback and iterate based on results
+5. Scale what works, discard what doesn't
+
+**Conclusion**
+The path to mastery is rarely linear, but consistent effort in the right direction yields remarkable results over time. Remember that progress, not perfection, is the goal.
+
+Let me know if you'd like me to dive deeper into any particular aspect!`
+    ]
+};
+
+// ============================================
+// MOCK AI FUNCTION
+// ============================================
+
+/**
+ * Simulates an AI API call with realistic delay and response generation
+ * @param {string} prompt - The user's input prompt
+ * @returns {Promise<string>} - The generated response
+ */
+async function generateAIResponse(prompt) {
+    // Simulate network delay (1.5 to 3 seconds)
+    const delay = 1500 + Math.random() * 1500;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Simulate occasional errors (5% chance)
+    if (Math.random() < 0.05) {
+        throw new Error('Network timeout. Please try again.');
+    }
+    
+    // Determine response type based on prompt content
+    const promptLower = prompt.toLowerCase();
+    let responsePool;
+    
+    if (promptLower.includes('email') || promptLower.includes('mail')) {
+        responsePool = mockResponses.email;
+    } else if (promptLower.includes('social') || promptLower.includes('post') || promptLower.includes('tweet')) {
+        responsePool = mockResponses.social;
+    } else if (promptLower.includes('blog') || promptLower.includes('article') || promptLower.includes('introduction')) {
+        responsePool = mockResponses.blog;
+    } else {
+        responsePool = mockResponses.default;
+    }
+    
+    // Select a random response from the pool
+    const randomIndex = Math.floor(Math.random() * responsePool.length);
+    return responsePool[randomIndex];
+}
+
+// ============================================
+// HISTORY MANAGEMENT
+// ============================================
+
+/**
+ * Loads history from localStorage
+ */
+function loadHistory() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            state.history = JSON.parse(stored);
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        state.history = [];
+    }
+    renderHistory();
+    updateHistoryCount();
+}
+
+/**
+ * Saves history to localStorage
+ */
+function saveHistory() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.history));
+    } catch (error) {
+        console.error('Error saving history:', error);
+        showToast('Failed to save history', 'error');
+    }
+}
+
+/**
+ * Adds a new item to history
+ * @param {string} prompt - The user's prompt
+ * @param {string} response - The AI's response
+ */
+function addToHistory(prompt, response) {
+    const historyItem = {
+        id: Date.now(),
+        prompt: prompt,
+        response: response,
+        timestamp: new Date().toISOString()
     };
-
-    history.push(obj);
-
-    // 🔥 SAVE
-    localStorage.setItem("history", JSON.stringify(history));
-
-    showDetails(obj);
-    updateHistory();
+    
+    // Add to beginning of array (newest first)
+    state.history.unshift(historyItem);
+    
+    // Keep only last 50 items
+    if (state.history.length > 50) {
+        state.history = state.history.slice(0, 50);
+    }
+    
+    saveHistory();
+    renderHistory();
+    updateHistoryCount();
+    
+    // Mark as selected
+    state.selectedHistoryId = historyItem.id;
 }
 
-function showDetails(obj) {
-    document.getElementById("details").innerHTML = `
-        <p><b>Input:</b> ${obj.input}</p>
-        <p><b>Result:</b> ${obj.result}</p>
-        <p><b>Time:</b> ${obj.time}</p>
-    `;
-}
-
-function updateHistory() {
-    let list = document.getElementById("historyList");
-    list.innerHTML = "";
-
-    history.forEach((item) => {
-        let li = document.createElement("li");
-        li.innerText = item.input;
-        li.onclick = () => showDetails(item);
-        list.appendChild(li);
+/**
+ * Renders the history list in the sidebar
+ */
+function renderHistory() {
+    if (state.history.length === 0) {
+        elements.historyList.innerHTML = `
+            <div class="history-empty">
+                <i data-lucide="inbox" class="icon-lg"></i>
+                <p>No history yet. Start generating content!</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+    
+    elements.historyList.innerHTML = state.history.map(item => `
+        <div class="history-item ${item.id === state.selectedHistoryId ? 'active' : ''}" 
+             data-id="${item.id}">
+            <div class="history-item-prompt">${escapeHtml(item.prompt)}</div>
+            <div class="history-item-meta">
+                <i data-lucide="clock" class="icon-sm"></i>
+                ${formatRelativeTime(item.timestamp)}
+            </div>
+        </div>
+    `).join('');
+    
+    // Reinitialize icons
+    lucide.createIcons();
+    
+    // Add click handlers
+    elements.historyList.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const id = parseInt(item.dataset.id);
+            loadHistoryItem(id);
+        });
     });
 }
-function clearHistory() {
-    localStorage.removeItem("history");
-    history = [];
-    updateHistory();
-    document.getElementById("details").innerHTML = "";
+
+/**
+ * Loads a specific history item
+ * @param {number} id - The history item ID
+ */
+function loadHistoryItem(id) {
+    const item = state.history.find(h => h.id === id);
+    if (!item) return;
+    
+    state.selectedHistoryId = id;
+    state.currentPrompt = item.prompt;
+    state.currentResponse = item.response;
+    
+    // Update input
+    elements.promptInput.value = item.prompt;
+    updateCharCount();
+    
+    // Show output
+    showOutput(item.response, item.timestamp);
+    
+    // Update history UI
+    renderHistory();
+    
+    // Close sidebar on mobile
+    closeSidebar();
 }
+
+/**
+ * Clears all history
+ */
+function clearHistory() {
+    if (state.history.length === 0) {
+        showToast('History is already empty', 'info');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+        state.history = [];
+        state.selectedHistoryId = null;
+        saveHistory();
+        renderHistory();
+        updateHistoryCount();
+        showToast('History cleared successfully', 'success');
+    }
+}
+
+/**
+ * Updates the history count display
+ */
+function updateHistoryCount() {
+    const count = state.history.length;
+    elements.historyCount.textContent = `${count} item${count !== 1 ? 's' : ''}`;
+}
+
+// ============================================
+// UI STATE MANAGEMENT
+// ============================================
+
+/**
+ * Shows the loading state
+ */
+function showLoading() {
+    elements.emptyState.classList.add('hidden');
+    elements.outputContent.classList.add('hidden');
+    elements.errorState.classList.add('hidden');
+    elements.loadingState.classList.remove('hidden');
+    elements.outputActions.classList.remove('visible');
+    elements.generateBtn.disabled = true;
+    state.isGenerating = true;
+}
+
+/**
+ * Shows the output with typing effect
+ * @param {string} text - The response text
+ * @param {string} timestamp - Optional timestamp for history items
+ */
+function showOutput(text, timestamp = null) {
+    elements.emptyState.classList.add('hidden');
+    elements.loadingState.classList.add('hidden');
+    elements.errorState.classList.add('hidden');
+    elements.outputContent.classList.remove('hidden');
+    elements.outputActions.classList.add('visible');
+    elements.generateBtn.disabled = false;
+    state.isGenerating = false;
+    
+    // Update meta information
+    elements.generatedTime.textContent = timestamp 
+        ? formatRelativeTime(timestamp) 
+        : 'Just now';
+    elements.wordCount.textContent = `${countWords(text)} words`;
+    
+    // Typing effect
+    typeText(text);
+}
+
+/**
+ * Shows the error state
+ * @param {string} message - The error message
+ */
+function showError(message) {
+    elements.emptyState.classList.add('hidden');
+    elements.loadingState.classList.add('hidden');
+    elements.outputContent.classList.add('hidden');
+    elements.errorState.classList.remove('hidden');
+    elements.outputActions.classList.remove('visible');
+    elements.errorMessage.textContent = message;
+    elements.generateBtn.disabled = false;
+    state.isGenerating = false;
+}
+
+/**
+ * Creates a typing effect for the output text
+ * @param {string} text - The text to type
+ */
+function typeText(text) {
+    elements.outputText.innerHTML = '';
+    let index = 0;
+    const speed = 10; // milliseconds per character
+    
+    // Create cursor element
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    
+    function type() {
+        if (index < text.length) {
+            // Get next chunk (type 2-5 characters at a time for speed)
+            const chunkSize = Math.floor(Math.random() * 4) + 2;
+            const chunk = text.slice(index, index + chunkSize);
+            
+            // Remove cursor, add text, add cursor back
+            cursor.remove();
+            elements.outputText.innerHTML += escapeHtml(chunk).replace(/\n/g, '<br>');
+            elements.outputText.appendChild(cursor);
+            
+            index += chunkSize;
+            setTimeout(type, speed);
+        } else {
+            // Remove cursor when done
+            setTimeout(() => cursor.remove(), 1000);
+        }
+    }
+    
+    elements.outputText.appendChild(cursor);
+    type();
+}
+
+// ============================================
+// SIDEBAR CONTROLS
+// ============================================
+
+function openSidebar() {
+    elements.sidebar.classList.add('open');
+    elements.sidebarOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+    elements.sidebar.classList.remove('open');
+    elements.sidebarOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ============================================
+// GENERATION HANDLERS
+// ============================================
+
+/**
+ * Handles the generate button click
+ */
+async function handleGenerate() {
+    const prompt = elements.promptInput.value.trim();
+    
+    if (!prompt) {
+        showToast('Please enter a prompt', 'error');
+        elements.promptInput.focus();
+        return;
+    }
+    
+    if (state.isGenerating) {
+        showToast('Generation in progress...', 'info');
+        return;
+    }
+    
+    state.currentPrompt = prompt;
+    showLoading();
+    
+    try {
+        const response = await generateAIResponse(prompt);
+        state.currentResponse = response;
+        showOutput(response);
+        addToHistory(prompt, response);
+        showToast('Content generated successfully!', 'success');
+    } catch (error) {
+        showError(error.message || 'An unexpected error occurred');
+        showToast(error.message || 'Generation failed', 'error');
+    }
+}
+
+/**
+ * Handles regeneration with the same prompt
+ */
+async function handleRegenerate() {
+    if (!state.currentPrompt) {
+        showToast('No prompt to regenerate', 'error');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const response = await generateAIResponse(state.currentPrompt);
+        state.currentResponse = response;
+        showOutput(response);
+        addToHistory(state.currentPrompt, response);
+        showToast('Content regenerated!', 'success');
+    } catch (error) {
+        showError(error.message || 'An unexpected error occurred');
+        showToast(error.message || 'Regeneration failed', 'error');
+    }
+}
+
+// ============================================
+// ACTION HANDLERS
+// ============================================
+
+/**
+ * Copies the current response to clipboard
+ */
+async function copyToClipboard() {
+    if (!state.currentResponse) {
+        showToast('Nothing to copy', 'error');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(state.currentResponse);
+        showToast('Copied to clipboard!', 'success');
+    } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = state.currentResponse;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('Copied to clipboard!', 'success');
+    }
+}
+
+/**
+ * Downloads the current response as a .txt file
+ */
+function downloadResult() {
+    if (!state.currentResponse) {
+        showToast('Nothing to download', 'error');
+        return;
+    }
+    
+    const content = `Prompt:\n${state.currentPrompt}\n\n---\n\nResponse:\n${state.currentResponse}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ai-generated-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('File downloaded!', 'success');
+}
+
+// ============================================
+// TOAST NOTIFICATIONS
+// ============================================
+
+/**
+ * Shows a toast notification
+ * @param {string} message - The message to display
+ * @param {string} type - The toast type (success, error, info)
+ */
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+        success: 'check-circle',
+        error: 'alert-circle',
+        info: 'info'
+    };
+    
+    toast.innerHTML = `
+        <span class="toast-icon">
+            <i data-lucide="${icons[type]}" class="icon"></i>
+        </span>
+        <span class="toast-message">${escapeHtml(message)}</span>
+        <button class="toast-close" aria-label="Close">
+            <i data-lucide="x" class="icon-sm"></i>
+        </button>
+    `;
+    
+    elements.toastContainer.appendChild(toast);
+    lucide.createIcons();
+    
+    // Close button handler
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        removeToast(toast);
+    });
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => removeToast(toast), 4000);
+}
+
+/**
+ * Removes a toast with animation
+ * @param {HTMLElement} toast - The toast element to remove
+ */
+function removeToast(toast) {
+    if (!toast.parentNode) return;
+    toast.classList.add('removing');
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 250);
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Escapes HTML special characters
+ * @param {string} text - The text to escape
+ * @returns {string} - The escaped text
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Formats a timestamp as relative time
+ * @param {string} timestamp - ISO timestamp
+ * @returns {string} - Formatted relative time
+ */
+function formatRelativeTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSecs < 60) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+}
+
+/**
+ * Counts words in a text
+ * @param {string} text - The text to count
+ * @returns {number} - Word count
+ */
+function countWords(text) {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+}
+
+/**
+ * Updates the character count display
+ */
+function updateCharCount() {
+    const count = elements.promptInput.value.length;
+    elements.charCount.textContent = count;
+    
+    if (count > 2000) {
+        elements.charCount.style.color = 'var(--danger)';
+    } else if (count > 1800) {
+        elements.charCount.style.color = 'var(--warning)';
+    } else {
+        elements.charCount.style.color = '';
+    }
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+
+function initializeEventListeners() {
+    // Sidebar controls
+    elements.openSidebarBtn.addEventListener('click', openSidebar);
+    elements.closeSidebarBtn.addEventListener('click', closeSidebar);
+    elements.sidebarOverlay.addEventListener('click', closeSidebar);
+    
+    // History
+    elements.clearHistoryBtn.addEventListener('click', clearHistory);
+    
+    // Input
+    elements.promptInput.addEventListener('input', updateCharCount);
+    elements.promptInput.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Enter to generate
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            handleGenerate();
+        }
+    });
+    
+    // Quick prompts
+    document.querySelectorAll('.chip[data-prompt]').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const promptText = chip.dataset.prompt;
+            elements.promptInput.value = promptText;
+            updateCharCount();
+            elements.promptInput.focus();
+        });
+    });
+    
+    // Generate
+    elements.generateBtn.addEventListener('click', handleGenerate);
+    
+    // Output actions
+    elements.regenerateBtn.addEventListener('click', handleRegenerate);
+    elements.copyBtn.addEventListener('click', copyToClipboard);
+    elements.downloadBtn.addEventListener('click', downloadResult);
+    elements.retryBtn.addEventListener('click', handleGenerate);
+    
+    // Handle escape key to close sidebar
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 1024) {
+            closeSidebar();
+        }
+    });
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+function initialize() {
+    // Initialize Lucide icons
+    lucide.createIcons();
+    
+    // Load history from localStorage
+    loadHistory();
+    
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Update character count
+    updateCharCount();
+    
+    // Focus input on desktop
+    if (window.innerWidth > 768) {
+        elements.promptInput.focus();
+    }
+    
+    console.log('AI Content Generator initialized successfully!');
+}
+
+// Start the application
+document.addEventListener('DOMContentLoaded', initialize);

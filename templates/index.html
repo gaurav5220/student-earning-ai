@@ -2,23 +2,193 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Generator</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="[fonts.googleapis.com](https://fonts.googleapis.com)">
+    <link rel="preconnect" href="[fonts.gstatic.com](https://fonts.gstatic.com)" crossorigin>
+    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="[unpkg.com](https://unpkg.com/lucide@latest)"></script>
 </head>
 <body>
+    <div class="app-container">
+        <!-- Animated Background -->
+        <div class="background-effects">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
 
-<h1>AI Generator</h1>
+        <!-- Sidebar - History Panel -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <i data-lucide="history" class="icon"></i>
+                    <h2>History</h2>
+                </div>
+                <button class="btn-icon" id="closeSidebar" aria-label="Close sidebar">
+                    <i data-lucide="x" class="icon"></i>
+                </button>
+            </div>
+            
+            <div class="history-list" id="historyList">
+                <!-- History items will be dynamically inserted here -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="btn btn-danger" id="clearHistory">
+                    <i data-lucide="trash-2" class="icon"></i>
+                    Clear History
+                </button>
+            </div>
+        </aside>
 
-<input type="text" id="inputText" placeholder="Enter something...">
-<button onclick="generate()">Generate</button>
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<div id="output"></div>
-<button onclick="downloadResult()">Download</button>
-<h2>Details</h2>
-<h2>History</h2>
-<ul id="historyList"></ul>
-<div id="details"></div>
-<button onclick="clearHistory()">Clear History</button>
-<script src="script.js"></script>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <button class="btn-icon" id="openSidebar" aria-label="Open history">
+                    <i data-lucide="menu" class="icon"></i>
+                </button>
+                
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="sparkles" class="icon"></i>
+                    </div>
+                    <h1>AI Content Generator</h1>
+                </div>
+                
+                <div class="header-actions">
+                    <span class="history-count" id="historyCount">0 items</span>
+                </div>
+            </header>
+
+            <!-- Generator Section -->
+            <section class="generator-section">
+                <!-- Input Card -->
+                <div class="card input-card">
+                    <div class="card-header">
+                        <i data-lucide="pen-line" class="icon"></i>
+                        <h3>Enter Your Prompt</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="promptInput" 
+                                placeholder="Describe what you want to generate... (e.g., 'Write a professional email about project updates')"
+                                rows="4"
+                            ></textarea>
+                            <div class="char-count">
+                                <span id="charCount">0</span> / 2000
+                            </div>
+                        </div>
+                        
+                        <div class="input-actions">
+                            <div class="quick-prompts">
+                                <span class="quick-label">Quick:</span>
+                                <button class="chip" data-prompt="Write a professional email">
+                                    <i data-lucide="mail" class="icon-sm"></i>
+                                    Email
+                                </button>
+                                <button class="chip" data-prompt="Create a social media post">
+                                    <i data-lucide="share-2" class="icon-sm"></i>
+                                    Social
+                                </button>
+                                <button class="chip" data-prompt="Write a blog introduction">
+                                    <i data-lucide="file-text" class="icon-sm"></i>
+                                    Blog
+                                </button>
+                            </div>
+                            
+                            <button class="btn btn-primary" id="generateBtn">
+                                <i data-lucide="wand-2" class="icon"></i>
+                                Generate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Card -->
+                <div class="card output-card" id="outputCard">
+                    <div class="card-header">
+                        <div class="output-title">
+                            <i data-lucide="bot" class="icon"></i>
+                            <h3>AI Response</h3>
+                        </div>
+                        <div class="output-actions" id="outputActions">
+                            <button class="btn-icon" id="regenerateBtn" title="Regenerate">
+                                <i data-lucide="refresh-cw" class="icon"></i>
+                            </button>
+                            <button class="btn-icon" id="copyBtn" title="Copy to clipboard">
+                                <i data-lucide="copy" class="icon"></i>
+                            </button>
+                            <button class="btn-icon" id="downloadBtn" title="Download as .txt">
+                                <i data-lucide="download" class="icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon">
+                                <i data-lucide="message-square-plus" class="icon-lg"></i>
+                            </div>
+                            <p>Enter a prompt and click Generate to see AI-powered content appear here</p>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div class="loading-state hidden" id="loadingState">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                            </div>
+                            <p class="loading-text">Generating your content<span class="loading-dots"></span></p>
+                        </div>
+                        
+                        <!-- Output Content -->
+                        <div class="output-content hidden" id="outputContent">
+                            <div class="output-text" id="outputText"></div>
+                            <div class="output-meta" id="outputMeta">
+                                <span class="meta-item">
+                                    <i data-lucide="clock" class="icon-sm"></i>
+                                    <span id="generatedTime"></span>
+                                </span>
+                                <span class="meta-item">
+                                    <i data-lucide="type" class="icon-sm"></i>
+                                    <span id="wordCount">0 words</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div class="error-state hidden" id="errorState">
+                            <div class="error-icon">
+                                <i data-lucide="alert-circle" class="icon-lg"></i>
+                            </div>
+                            <p class="error-message" id="errorMessage">Something went wrong</p>
+                            <button class="btn btn-secondary" id="retryBtn">
+                                <i data-lucide="refresh-cw" class="icon"></i>
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>Built with <i data-lucide="heart" class="icon-sm heart-icon"></i> using modern web technologies</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="script.js"></script>
 </body>
 </html>
