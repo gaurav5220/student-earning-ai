@@ -48,7 +48,4 @@ Do NOT keep it short.
 
 
 if __name__ == "__main__":
- import os
-
-if __name__ == "__main__":
     app.run(debug=True)
